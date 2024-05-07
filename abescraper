@@ -1,0 +1,32 @@
+from bs4 import BeautifulSoup
+import requests
+
+r = requests.get("https://www.abebooks.com/servlet/SearchResults?sortby=0&prevpage=1&ds=100&vci=1002493&bsi=0%20%20#Results#4,300#")
+soup = BeautifulSoup(r.content, "lxml")
+
+products = soup.find_all("li", attrs={"class":"cf result-item"})
+
+headers = {"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Safari/605.1.15"}
+
+a = 1
+for product in products:
+    product_links = product.find_all("div", attrs={"class": "text-center"})
+    for i in product_links:
+        id_value = f"listing_{a}"
+        link = i.find("a", attrs={"id": id_value})
+        
+        if link:
+            link_continue = link.get("href")
+            link_beginning = "https://www.abebooks.com"
+            link_full = link_beginning + link_continue
+
+            product_response = requests.get(link_full, headers=headers)
+            product_soup = BeautifulSoup(product_response.content, "lxml")
+            product_details = product_soup.find_all("div", attrs={"id": "main"})
+            
+          
+            for detail in product_details:
+                isbn = detail.get('data-csa-c-item-id')
+                print("ISBN:", isbn)
+                
+                a += 1
